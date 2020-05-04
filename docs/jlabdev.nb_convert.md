@@ -27,7 +27,7 @@ notebook2py("..", ".")
 ```
 Output:
 ```
-Converting to py: notebook_convert.ipynb
+Converting to py: nb_convert.ipynb
 
 ```
 
@@ -58,7 +58,7 @@ notebook2md("..", ".")
 ```
 Output:
 ```
-Converting to md: notebook_convert.ipynb
+Converting to md: nb_convert.ipynb
 
 ```
 

@@ -32,10 +32,16 @@ setup(
         'Programming Language :: Python',
     ],
     keywords='',
-    packages=find_packages(exclude=['docs', 'notebooks']),
+    packages=find_packages(exclude=['docs']),
     include_package_data=True,
     author='Michael Fuerst',
     install_requires=install_requires,
     dependency_links=dependency_links,
-    author_email='mail@michaelfuerst.de'
+    author_email='mail@michaelfuerst.de',
+    entry_points={
+        'console_scripts': [
+            'nb2py = jlabdev.convert:notebook2py',
+            'nb2md = jlabdev.convert:notebook2md',
+        ]
+    }
 )

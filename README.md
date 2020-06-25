@@ -37,17 +37,9 @@ notebook2py(project_root=".", nb_root="notebooks")
 notebook2md(project_root=".", nb_root="notebooks")
 ```
 
-### Readme and Documentation
-
-In order to create the typical project readme, create a README_TEMPLATE.md in your notebook root folder. This Markdown can be structured as you want. However, the first occurance of `{toc}` will be automatically replaced by a table of content for the documentation (as in this readme under section documentation).
-
 # Documentation
 
-Here is a detailed documentation of all modules in jlabdev:
-
-* [01. Convert Notebooks to *.py and *.md
-](docs/jlabdev.nb_convert.md)
-
+Documentation can be found in [docs](docs/README.md) it will be automatically generated there. The README.md is an overview over all packages availible.
 
 
 # License

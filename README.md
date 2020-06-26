@@ -3,13 +3,12 @@
 > Develop python packages using jupyterlab.
 
 This library allows you to develop regular python packages while writing your code in jupyterlab.
-You can create notebooks to develop your code and in these notebooks, simply annotate your cells with `#export` if you want them to be put in the library.
+You can create notebooks to develop your code and in these notebooks, simply annotate your cells with `#export` if you want them to be put in the library. (A notebook must be marked for conversion with `#convert` in the first code cell.)
 Other cells will be used as examples in your doc (together with the markdown of your notebook) unless marked with `#hide`.
-You can specify the path of the package where to put the code by using `#default_exp mymodule.myclass`.
 
 ![Image of nb_convert notebook](images/ExampleNotebook.png)
 
-Of course JLAB Dev itself is completly implemented as a notebook in jupyterlab.
+Of course JLAB Dev itself is completly implemented as a notebook in jupyterlab (see [here](jlabdev/convert.ipynb)).
 
 ## Installation
 
@@ -27,14 +26,19 @@ pip install git+https://github.com/penguinmenac3/jlabdev.git
 
 ### Basics
 
-Simply create your notebooks and add a code cell with `#default_exp mymodule.myclass` to the top and annotate all cells you want to export with `#export`.
+Simply create your notebooks and add a code cell with `#convert` as the first cell and annotate all cells you want to export with `#export`.
 
-Now you can compile your notebook into python and markdown doc by saving it and then running the following 3 python lines with the home of your project as the working directory:
+Now you can compile your notebook into python and markdown doc by saving it and then running these commands at the root of your project folder:
 
-```pyhton
-from jlabdev.nb_convert import notebook2py, notebook2md
-notebook2py(project_root=".", nb_root="notebooks")
-notebook2md(project_root=".", nb_root="notebooks")
+```bash
+nb2py  # Creates python files next to the notebooks
+nb2md  # Creates markdown doc in docs
+```
+
+When you edit your python file (e.g. refactoring) and want to update the notebook from the python file.
+
+```bash
+py2nb
 ```
 
 # Documentation

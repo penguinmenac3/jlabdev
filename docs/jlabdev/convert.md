@@ -62,3 +62,11 @@ Converting to md: jlabdev/convert.ipynb
 
 ```
 
+**def python2nb(project_root: str = ".") -> None:**
+
+Convert all notebooks in the folder.
+
+* project_root: The root directory of the project. The default exp path is relative to this folder.
+* nb_root: The root directory of all the notebooks. Only notebooks in this or any subfolder will be considered.
+
+

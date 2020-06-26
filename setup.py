@@ -42,6 +42,7 @@ setup(
         'console_scripts': [
             'nb2py = jlabdev.convert:notebook2py',
             'nb2md = jlabdev.convert:notebook2md',
+            'py2nb = jlabdev.convert:python2nb',
         ]
     }
 )

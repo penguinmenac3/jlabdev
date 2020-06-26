@@ -277,7 +277,7 @@ def _overwrite_exported_cells(data, cells):
 # Cell: 16
 def _save_notebook(file_path: str, notebook: Dict) -> None:
     with open(file_path, "w") as f:
-        return f.write(json.dumps(notebook))
+        return f.write(json.dumps(notebook, indent=1) + "\n")
 
 
 # Cell: 17

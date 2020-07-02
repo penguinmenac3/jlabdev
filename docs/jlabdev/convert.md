@@ -2,16 +2,6 @@
 
 > This tool allows conversion from an ipynb notebook into .py or .md files.
 
-Example:
-```python
-def _is_exportable_cell(cell) -> bool:
-    return _is_non_empty_code_cell(cell) and cell["source"][0].startswith("#export")
-```
-Output:
-```
-
-```
-
 ## Convert all Notebooks in a Folder to Python
 
 One core feature of this library is to convert all notebook files located beneath the `nb_root` folder into python files relative to the `project_root`.

@@ -40,8 +40,9 @@ setup(
     author_email='mail@michaelfuerst.de',
     entry_points={
         'console_scripts': [
+            'nb2all = jlabdev.convert:notebook2all',
             'nb2py = jlabdev.convert:notebook2py',
-            'nb2md = jlabdev.convert:notebook2md',
+            'nb2doc = jlabdev.convert:notebook2doc',
             'py2nb = jlabdev.convert:python2nb',
         ]
     }

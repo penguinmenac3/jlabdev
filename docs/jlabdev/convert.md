@@ -1,3 +1,5 @@
+[Back to Overview](../README.md)
+
 # 01. Convert Notebooks to *.py and *.md
 
 > This tool allows conversion from an ipynb notebook into .py or .md files.
@@ -44,9 +46,12 @@ For this conversion the notebook is scanned for:
     * other code cell -> The cell is treated as an example and the code and the output are inserted into the markdown.
 
 
-### *def* **notebook2md**(project_root: str = ".") -> None
+### *def* **notebook2doc**(project_root: str = ".") -> None
 
 Convert all notebooks in the folder.
+
+Also converts notebooks annotated with #example in first cell.
+All notebooks, which have a title starting with "Example: " are listed under examples without the "Example: " shown in the list.
 
 * project_root: The root directory of the project. The default exp path is relative to this folder.
 * nb_root: The root directory of all the notebooks. Only notebooks in this or any subfolder will be considered.
@@ -54,7 +59,7 @@ Convert all notebooks in the folder.
 
 Example:
 ```python
-notebook2md()
+notebook2doc()
 ```
 Output:
 ```
@@ -68,5 +73,12 @@ Convert all notebooks in the folder.
 
 * project_root: The root directory of the project. The default exp path is relative to this folder.
 * nb_root: The root directory of all the notebooks. Only notebooks in this or any subfolder will be considered.
+
+
+### *def* **notebook2all**(project_root: str = ".") -> None
+
+Run the notebook2py and notebook2doc commands.
+
+* project_root: (Optional[str]) The path to the project root. Default: ".".
 
 

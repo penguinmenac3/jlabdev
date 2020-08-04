@@ -5,6 +5,9 @@ from typing import List, Dict, Optional
 import json
 import os
 import sys
+import hashlib
+import shutil
+import base64
 
 
 # Cell: 1
@@ -13,8 +16,8 @@ def _get_files(folder: str = ".") -> List[str]:
     for root, dirs, files in os.walk(folder):
         if ".ipynb_checkpoints" in root:
             continue
-        files = map(_join_path_cleanly, [root], files)
-        file_paths.extend(files)
+        for f in files:
+            file_paths.append(_join_path_cleanly(root, f))
     return file_paths
 
 
@@ -50,11 +53,13 @@ def _is_non_empty_code_cell(cell):
 
 
 # Cell: 7
-def _is_convertible_nb(data) -> str:
+def _is_convertible_nb(data, find_examples=False) -> bool:
     for cell in data["cells"]:
         if not _is_non_empty_code_cell(cell):
             continue
         if cell["source"][0].startswith("#convert"):
+            return True
+        if find_examples and cell["source"][0].startswith("#example"):
             return True
     return False
 
@@ -184,31 +189,59 @@ def _extract_doc(source:str) -> str:
 
 
 # Cell: 16
-def _get_doc(data) -> str:
-    doc = ""
+def _fix_paths(doc: str) -> str:
+    start = 0
+    idx = doc.find("![", start)
+    while idx >= 0:
+        left = doc.find("](", idx)
+        if left != doc.find("](data:", idx):
+            doc = doc[:left] + "](../" + doc[left+2:]
+        start = idx + 1
+        idx = doc.find("![", start)
+    return doc
+
+
+# Cell: 17
+def _get_doc(data, base_path_relative, root_path) -> str:
+    doc = "[Back to Overview]({})\n\n".format(base_path_relative + "/README.md")
+    images = {}
     title = None
     for cell in data["cells"]:
         # Example Cell
-        if cell["cell_type"] == "code" and len(cell["source"]) > 0 and not cell["source"][0].startswith("#export") and not cell["source"][0].startswith("#hide") and not cell["source"][0].startswith("#convert"):
+        if cell["cell_type"] == "code" and len(cell["source"]) > 0 and not cell["source"][0].startswith("#export") and not cell["source"][0].startswith("#hide") and not cell["source"][0].startswith("#convert") and not cell["source"][0].startswith("#example"):
             doc += "Example:\n"
             doc += "```python\n"
             for line in cell["source"]:
                 doc += line
             doc += "\n```\n"
-            doc += "Output:\n"
-            doc += "```\n"
+            image_data = []
+            outp_text = ""
             for outp in cell["outputs"]:
                 if "text" in outp:
                     for entry in outp["text"]:
-                        doc += entry
+                        outp_text += entry
+                if "data" in outp:
+                    if "image/png" in outp["data"]:
+                        image_data.append(outp["data"]["image/png"])
                 if "traceback" in outp:
                     for entry in outp["traceback"]:
                         while entry.find('\x1b') >= 0:
                             start = entry.find('\x1b')
                             end = entry.find("m", start)
                             entry = entry[:start] + entry[end+1:]
-                        doc += entry + "\n"
-            doc += "\n```\n"
+                        outp_text += entry + "\n"
+
+            if outp_text != "":
+                doc += "Output:\n"
+                doc += "```\n"
+                doc += outp_text
+                doc += "\n```\n"
+            for img in image_data:
+                md5 = hashlib.md5(img.encode('utf-8')).hexdigest()
+                with open(root_path + "/docs/jlabdev_images/{}.png".format(md5), "wb") as fh:
+                    
+                    fh.write(base64.b64decode(img))
+                doc +="![data](" + base_path_relative + "/docs/jlabdev_images/{}.png)\n".format(md5)
             doc += "\n"
 
         # Export Cell
@@ -223,13 +256,16 @@ def _get_doc(data) -> str:
                     title = line[2:]
                 doc += line
             doc += "\n\n"
+
+    doc = _fix_paths(doc)
+    
     return doc, title
 
 
-# Cell: 17
+# Cell: 18
 def _write_md(file_path, root: str = ".") -> str:
     notebook = _get_notebook(file_path)
-    if not _is_convertible_nb(notebook):
+    if not _is_convertible_nb(notebook, find_examples=True):
         return None, None
     doc_path = os.path.join(root, "docs")
     os.makedirs(doc_path, exist_ok=True)
@@ -237,7 +273,8 @@ def _write_md(file_path, root: str = ".") -> str:
     py_package = file_path.replace("/", ".").replace("..", ".").replace(".ipynb", "")
     md_name = py_package.replace(".", "/") + ".md"
     md_path = os.path.join(root, "docs", md_name).replace("\\", "/")
-    doc, title = _get_doc(notebook)
+    base_path_relative = "/".join([".." for _ in range(len(md_name.split("/"))-1)])
+    doc, title = _get_doc(notebook, base_path_relative, root)
     path = "/".join(md_path.split("/")[:-1])
     if not os.path.exists(path):
         os.makedirs(path)
@@ -246,19 +283,26 @@ def _write_md(file_path, root: str = ".") -> str:
     return md_name, title
 
 
-# Cell: 18
+# Cell: 19
 README_TEMPLATE = """
-# Package List
+# Examples
+
+{examples}
+
+# Documentation
 
 {toc}
 
 """
 
 
-# Cell: 19
-def notebook2md(project_root: str = ".") -> None:
+# Cell: 20
+def notebook2doc(project_root: str = ".") -> None:
     """
     Convert all notebooks in the folder.
+
+    Also converts notebooks annotated with #example in first cell.
+    All notebooks, which have a title starting with "Example: " are listed under examples without the "Example: " shown in the list.
     
     :param project_root: The root directory of the project. The default exp path is relative to this folder.
     :param nb_root: The root directory of all the notebooks. Only notebooks in this or any subfolder will be considered.
@@ -266,6 +310,8 @@ def notebook2md(project_root: str = ".") -> None:
     readme_template = README_TEMPLATE
     notebooks = _get_notebooks(project_root)
     index = []
+    shutil.rmtree(os.path.join(project_root, "docs"))
+    os.makedirs(os.path.join(project_root, "docs", "jlabdev_images"))
     for nb_path in notebooks:
         print("Converting to md: {}".format(nb_path))
         name, title = _write_md(nb_path, root=project_root)
@@ -277,13 +323,20 @@ def notebook2md(project_root: str = ".") -> None:
     if len(index) > 0:
         with open(os.path.join(project_root, "docs", "README.md"), "w", encoding="utf8") as f:
             toc = ""
+            examples = ""
             for i in index:
-                toc += "* [{}]({})\n".format(i[1], i[0])
-            readme_template = readme_template.replace("`{toc}`", "`#toc%`").format(toc=toc).replace("`#toc%`", "`{toc}`")
+                if i[1].startswith("Example: "):
+                    examples += "* [{}]({})\n".format(i[1].replace("Example: ", ""), i[0])
+                else:
+                    toc += "* [{}]({})\n".format(i[1], i[0])
+
+            if examples == "":
+                examples = "(no examples found)"
+            readme_template = readme_template.replace("`{toc}`", "`#toc%`").format(toc=toc, examples=examples).replace("`#toc%`", "`{toc}`")
             f.write(readme_template)
 
 
-# Cell: 20
+# Cell: 21
 def _get_python_files(folder: str = ".") -> List[str]:
     pys = []
     for root, dirs, files in os.walk(folder):
@@ -295,7 +348,7 @@ def _get_python_files(folder: str = ".") -> List[str]:
     return pys
 
 
-# Cell: 21
+# Cell: 22
 def _get_py_cells(py_file):
     with open(py_file, "r", encoding="utf8") as f:
         data = f.read()
@@ -328,7 +381,7 @@ def _get_py_cells(py_file):
     return file_path, cells
 
 
-# Cell: 22
+# Cell: 23
 def _overwrite_exported_cells(data, cells):
     i = 0
     for cell in data["cells"]:
@@ -337,13 +390,13 @@ def _overwrite_exported_cells(data, cells):
             i += 1
 
 
-# Cell: 23
+# Cell: 24
 def _save_notebook(file_path: str, notebook: Dict) -> None:
     with open(file_path, "w", encoding="utf8") as f:
         return f.write(json.dumps(notebook, indent=1) + "\n")
 
 
-# Cell: 24
+# Cell: 25
 def python2nb(project_root: str = ".") -> None:
     """
     Convert all notebooks in the folder.
@@ -365,11 +418,24 @@ def python2nb(project_root: str = ".") -> None:
             print("Updated notebook: {}".format(file_path))
 
 
-# Cell: 25
+# Cell: 26
+def notebook2all(project_root: str = ".") -> None:
+    """
+    Run the notebook2py and notebook2doc commands.
+
+    :param project_root: (Optional[str]) The path to the project root. Default: ".".
+    """
+    notebook2py(project_root)
+    notebook2doc(project_root)
+
+
+# Cell: 27
 if __name__ == "__main__":
+    if "--nb2all" in sys.argv:
+        notebook2all()
     if "--nb2py" in sys.argv:
         notebook2py()
-    if "--nb2md" in sys.argv:
-        notebook2md()
+    if "--nb2doc" in sys.argv:
+        notebook2doc()
     if "--py2nb" in sys.argv:
         python2nb()

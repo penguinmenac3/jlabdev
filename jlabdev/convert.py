@@ -14,6 +14,12 @@ import base64
 def _get_files(folder: str = ".") -> List[str]:
     file_paths = []
     for root, dirs, files in os.walk(folder):
+        out_dirs = []
+        for folder in dirs:
+            current_dir = root.split(os.sep)[-1]
+            if not current_dir.startswith(".") or current_dir == ".":
+                out_dirs.append(folder)
+        dirs[:] = out_dirs
         if ".ipynb_checkpoints" in root:
             continue
         for f in files:
@@ -151,13 +157,13 @@ def _extract_doc(source:str) -> str:
                     line = line.replace(fun_name, "**" + fun_name + "**")
                     line = line.replace("class", "*class*")
                     line = line.replace("self", "*self*")
-                    current_doc = [("#"*level) + " " + line[:-1], ""]
+                    current_doc = ["---\n---\n#" + ("#"*level) + " " + line[:-1], ""]
                 else:
                     fun_name = line.split(" ")[1].split("(")[0]
                     line = line.replace(fun_name, "**" + fun_name + "**")
                     line = line.replace("def", "*def*")
                     line = line.replace("self", "*self*")
-                    current_doc = ["### " + line[:-1] + "", ""]
+                    current_doc = ["---\n### " + line[:-1] + "", ""]
                 mode = 1
                 continue
         if mode == 1:
@@ -182,7 +188,17 @@ def _extract_doc(source:str) -> str:
         output += doc[0] + "\n\n"
         if doc[1] == "":
             doc[1] = "*(no documentation found)*"
-        output += doc[1].replace(":param", "*").replace(":return:", "* returns:")
+
+        lines = doc[1].split("\n")
+        out_lines = []
+        for line in lines:
+            if line.lstrip().startswith(":param"):
+                line = line.replace(":param ", "* **")
+                end_of_param = line.index(":")
+                line = line[:end_of_param] + "**" + line[end_of_param:]
+            out_lines.append(line)
+        doc[1] = "\n".join(out_lines)
+        output += doc[1].replace(":return:", "* **returns**:")
         output += "\n\n"
         
     return output

@@ -66,6 +66,9 @@ notebook2doc()
 Output:
 ```
 Converting to md: jlabdev/convert.ipynb
+Converting to md: setup.py
+Converting to md: jlabdev/convert_copy.py
+Converting to md: jlabdev/__init__.py
 
 ```
 

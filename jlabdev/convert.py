@@ -130,7 +130,7 @@ def _combine_cells_to_code(cells, file_path: str) -> str:
         # Add cell source to code
         if _is_non_empty_markdown_cell(cell):
             code += "# Cell: {}\n".format(cell_idx)
-            code += "\"\"\"\n"
+            code += "\"\"\"doc\n"
         code += "".join(cell["source"])
         if _is_non_empty_markdown_cell(cell):
             while code.endswith("\n"):
@@ -225,7 +225,7 @@ def _extract_doc(source:str) -> str:
                     line = line.replace("self", "*self*")
                     current_doc = ["---\n### " + line[:-1] + "", ""]
                 mode = 1
-            elif mode == 0 and line.startswith("\"\"\"") and in_multiline_string:
+            elif mode == 0 and line.startswith("\"\"\"doc") and in_multiline_string:
                 mode = 2
                 current_doc = ["", ""]
             elif mode == 1 and line.startswith("\"\"\"") and in_multiline_string:

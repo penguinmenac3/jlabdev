@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 from codecs import open
 from os import path
 
-__version__ = '20221106'
+__version__ = '20230119'
 
 here = path.abspath(path.dirname(__file__))
 
@@ -40,10 +40,10 @@ setup(
     author_email='mail@michaelfuerst.de',
     entry_points={
         'console_scripts': [
-            'nb2all = jlabdev.convert:notebook2all',
-            'nb2py = jlabdev.convert:notebook2py',
-            'nb2doc = jlabdev.convert:notebook2doc',
-            'py2nb = jlabdev.convert:python2nb',
+            'nb2all = jlabdev.main:notebook2all',
+            'nb2py = jlabdev.main:notebook2py',
+            'nb2doc = jlabdev.main:notebook2doc',
+            'py2nb = jlabdev.main:python2nb',
         ]
     }
 )

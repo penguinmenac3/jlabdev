@@ -5,7 +5,7 @@
 
 # Documentation
 
-* [01. Convert Notebooks to *.py and *.md
-](jlabdev/convert.md)
+* [jlabdev - Convert `.ipynb` to `.py` and generate `.md`-docs
+](jlabdev/main.md)
 
 
